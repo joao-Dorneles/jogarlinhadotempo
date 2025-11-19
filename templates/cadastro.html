@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="../static/cadastro.css">
+</head>
+
+<body>
+
+    <header>
+        <a href="https://linhadotempo.onrender.com"><img class="img-header" id="seta-voltar"
+                src="../static/images/icons/seta-esquerda.png"></a>
+        <img class="img-header" id="logo" src="../static/images/general/logoNOBG.png">
+    </header>
+
+    <div class="formulario">
+        <h2>Cadastrar</h2>
+        <form id="login-form">
+            <label for="email">E-mail</label>
+            <input id="email" type="email" name="email" required placeholder="Informe seu email">
+
+            <label for="senha">Senha</label>
+            <input id="senha" type="password" name="senha" required placeholder="Crie sua senha">
+
+            <label for="cpf">CPF</label>
+            <input id="cpf" type="text" name="cpf" required placeholder="Informe seu cpf">
+            <div class="executar">
+                <button type="submit">Cadastrar</button>
+                <a id="cadastrar" href="./index.html">Já possuo conta</a>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- div da animcao inferior -->
+    <div class="waves">
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+        <div class="wave wave4"></div>
+        <div class="wave wave5"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('login-form');
+        const cpfInput = document.getElementById('cpf');
+
+        cpfInput.addEventListener('input', function () {
+            let cpf = cpfInput.value.replace(/\D/g, '');
+            if (cpf.length > 11) cpf = cpf.slice(0, 11);
+            cpfInput.value = cpf.replace(/(\d{3})(\d)/, '$1.$2')
+                .replace(/(\d{3})(\d)/, '$1.$2')
+                .replace(/(\d{3})(\d{1,2})/, '$1-$2');
+        });
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const senha = document.getElementById('senha').value.trim();
+            const cpfNumeros = (cpfInput.value || '').replace(/\D/g, '');
+
+            if (senha.length < 6 || senha.length > 8) {
+                alert('A senha deve ter entre 6 e 8 caracteres.');
+                event.stopImmediatePropagation && event.stopImmediatePropagation();
+                cpfInput.focus();
+                return;
+            }
+
+            if (cpfNumeros.length !== 11) {
+                alert('O CPF deve ter exatamente 11 números.');
+                event.stopImmediatePropagation && event.stopImmediatePropagation();
+                cpfInput.focus();
+                return;
+            }
+
+            window.location.href = "./index.html";
+        });
+
+    </script>
+
+</body>
+
+</html>
