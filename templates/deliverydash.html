@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Dash 🚗</title>
+    <link rel="shortcut icon" href="../static/images/general/logoNOBG.png">
+    <style>
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            background: #202020;
+            font-family: 'Press Start 2P', monospace;
+            color: #00ff99;
+        }
+
+        #gameWrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 160px;
+        }
+
+        canvas {
+            display: block;
+            background: #202020;
+            border: 4px solid #30ef99;
+        }
+
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #00ff99;
+            font-size: 20px;
+        }
+
+        #gameOver {
+            position: absolute;
+            top: 40%;
+            width: 100%;
+            text-align: center;
+            font-size: 20px;
+            color: #ff4040;
+            display: none;
+        }
+
+        #countdown {
+            position: absolute;
+            top: 40%;
+            width: 100%;
+            text-align: center;
+            font-size: 60px;
+            color: #00ff99;
+        }
+
+        #controls {
+            position: relative;
+            margin-top: -130px;
+            display: grid;
+            grid-template-columns: 100px 100px 100px;
+            grid-template-rows: 100px 100px;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+        }
+
+        .btn {
+            width: 100px;
+            height: 100px;
+            background: rgba(0, 255, 153, 0.15);
+            border: 2px solid #00ff99;
+            border-radius: 50%;
+            color: #00ff99;
+            font-size: 26px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: 0.1s;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .btn:active {
+            background: rgba(0, 255, 153, 0.4);
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+
+<body>
+
+    <audio id="bgMusic" loop autoplay muted>
+        <source src="../static/audio/Helios.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="s_hit" src="../static/audio/hit.mp3" preload="auto"></audio>
+    <audio id="s_coin" src="../static/audio/coin.mp3" preload="auto"></audio>
+    <audio id="s_magnet" src="../static/audio/magnet.mp3" preload="auto"></audio>
+    <audio id="s_heart" src="../static/audio/heart.mp3" preload="auto"></audio>
+    <audio id="s_shield" src="../static/audio/shield.mp3" preload="auto"></audio>
+    <audio id="s_gameover" src="../static/audio/gameover.mp3" preload="auto"></audio>
+    <audio id="s_start" src="../static/audio/start.mp3" preload="auto"></audio>
+
+    <div id="hud">Velocidade: <span id="speed">0</span> | Pontos: <span id="score">0</span> | Vidas: <span
+            id="lives">3</span></div>
+    <div id="gameOver">🚗 GAME OVER 🚗<br><small>Pressione R para reiniciar</small></div>
+    <div id="countdown"></div>
+
+    <div id="gameWrapper">
+        <canvas id="gameCanvas" width="480" height="640"></canvas>
+    </div>
+
+    <div id="controls">
+        <div></div>
+        <div class="btn" data-dir="up">▲</div>
+        <div></div>
+        <div class="btn" data-dir="left">◀</div>
+        <div class="btn" data-dir="down">▼</div>
+        <div class="btn" data-dir="right">▶</div>
+    </div>
+
+    <script>
+        /* -------------------------------
+           Sound manager (cloneNode para mix)
+        ---------------------------------*/
+        const SoundManager = {
+            volume: 1.0,
+            // mapeie os nomes para os elementos existentes no DOM
+            list: {
+                hit: document.getElementById("s_hit"),
+                coin: document.getElementById("s_coin"),
+                magnet: document.getElementById("s_magnet"),
+                heart: document.getElementById("s_heart"),
+                shield: document.getElementById("s_shield"),
+                gameover: document.getElementById("s_gameover"),
+                start: document.getElementById("s_start"),
+            },
+
+            play(name) {
+                const srcEl = this.list[name];
+                if (!srcEl) return;
+                try {
+                    // clone para poder tocar várias instâncias simultâneas
+                    const inst = srcEl.cloneNode(true);
+                    inst.volume = this.volume;
+                    inst.muted = srcEl.muted || false;
+                    // pequena proteção contra erro de play por política do browser
+                    const p = inst.play();
+                    if (p && p.catch) p.catch(() => {/* silent */ });
+                } catch (e) {
+                    // fallback: criar novo Audio com o mesmo src
+                    try {
+                        const a = new Audio(srcEl.currentSrc || srcEl.src);
+                        a.volume = this.volume;
+                        a.play().catch(() => { });
+                    } catch (err) { /* ignore */ }
+                }
+            },
+
+            setMuted(muted) {
+                // define muted no elemento base (os clones herdarão se criado depois)
+                for (const k in this.list) {
+                    if (this.list[k]) this.list[k].muted = muted;
+                }
+            },
+
+            setVolume(v) {
+                this.volume = Math.max(0, Math.min(1, v));
+            }
+        };
+
+        /* -------------------------------
+           Ativação do som (autoplay policies)
+        ---------------------------------*/
+        const bgMusic = document.getElementById("bgMusic");
+        bgMusic.volume = 1.0;
+
+        // função chamada no primeiro clique/tecla — desmuta bg e efeitos
+        function ativarSom() {
+            if (!bgMusic) return;
+            bgMusic.muted = false;
+            try { bgMusic.play(); } catch (e) { }
+
+            // desmuta também os áudios de efeito (base)
+            SoundManager.setMuted(false);
+        }
+
+        document.addEventListener("click", ativarSom, { once: true });
+        document.addEventListener("keydown", ativarSom, { once: true });
+
+        /* -------------------------------
+           Seu restante do jogo (mantive tudo igual, só adicionei os plays)
+        ---------------------------------*/
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        ctx.textBaseline = 'top';
+        ctx.textAlign = 'left';
+
+        const speedDisplay = document.getElementById("speed");
+        const scoreDisplay = document.getElementById("score");
+        const livesDisplay = document.getElementById("lives");
+        const gameOverEl = document.getElementById("gameOver");
+        const countdownEl = document.getElementById("countdown");
+
+        let roadSpeed = 3;
+        let acceleration = 0.0004;
+        let playerSpeed = 4;
+        let playerX = canvas.width / 2 - 20;
+        let playerY = canvas.height - 120;
+        const roadWidth = 300;
+        const laneCount = 4;
+        const laneWidth = roadWidth / laneCount;
+        let roadLines = [];
+        let keys = {};
+        let score = 0;
+        let lives = 3;
+        let obstacles = [];
+        let foods = [];
+        let magnets = [];
+        let hearts = [];
+        let shields = [];
+
+        let magnetActive = false;
+        let magnetTimer = 0;
+
+        let shieldActive = false;
+        let shieldTimer = 0;
+
+        let gameOver = false;
+        let gameStarted = false;
+
+        const player = { x: playerX, y: playerY, w: 20, h: 35, color: "#00ff99" };
+
+        const obstacleTypes = [
+            { emoji: "🚧", w: 30, h: 30 },
+            { emoji: "🐶", w: 30, h: 30 },
+            { emoji: "🪨", w: 25, h: 25 }
+        ];
+
+        const foodTypes = [
+            { emoji: "🍔", w: 30, h: 30, points: 100 },
+            { emoji: "🍕", w: 30, h: 30, points: 120 }
+        ];
+
+        const magnetType = { emoji: "🧲", w: 30, h: 30 };
+        const heartType = { emoji: "❤", w: 30, h: 30 };
+        const shieldType = { emoji: "🛡", w: 30, h: 30 };
+
+        function collides(a, b) {
+            return (
+                a.x < b.x + b.w &&
+                a.x + a.w > b.x &&
+                a.y < b.y + b.h &&
+                a.y + a.h > b.y
+            );
+        }
+
+        function safeSpawn(list, obj) {
+            const allLists = [obstacles, foods, magnets, hearts, shields];
+
+            for (let arr of allLists) {
+                for (let item of arr) {
+                    if (collides(obj, item)) return false;
+                }
+            }
+
+            list.push(obj);
+            return true;
+        }
+
+        function spawnObstacle() {
+            if (Math.random() < 0.02) {
+                const lane = Math.floor(Math.random() * laneCount);
+                const roadX = canvas.width / 2 - roadWidth / 2;
+                const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+
+                const obj = {
+                    ...type,
+                    x: roadX + lane * laneWidth + laneWidth / 2 - type.w / 2,
+                    y: -50
+                };
+
+                safeSpawn(obstacles, obj);
+            }
+        }
+
+        function spawnFood() {
+            if (Math.random() < 0.015) {
+                const lane = Math.floor(Math.random() * laneCount);
+                const roadX = canvas.width / 2 - roadWidth / 2;
+                const type = foodTypes[Math.floor(Math.random() * foodTypes.length)];
+
+                const obj = {
+                    ...type,
+                    x: roadX + lane * laneWidth + laneWidth / 2 - type.w / 2,
+                    y: -50
+                };
+
+                safeSpawn(foods, obj);
+            }
+        }
+
+        function spawnMagnet() {
+            if (Math.random() < 0.0002) {
+                const lane = Math.floor(Math.random() * laneCount);
+                const roadX = canvas.width / 2 - roadWidth / 2;
+
+                const obj = {
+                    ...magnetType,
+                    x: roadX + lane * laneWidth + laneWidth / 2 - magnetType.w / 2,
+                    y: -50
+                };
+
+                safeSpawn(magnets, obj);
+            }
+        }
+
+        function spawnHeart() {
+            if (Math.random() < 0.0001) {
+                const lane = Math.floor(Math.random() * laneCount);
+                const roadX = canvas.width / 2 - roadWidth / 2;
+
+                const obj = {
+                    ...heartType,
+                    x: roadX + lane * laneWidth + laneWidth / 2 - heartType.w / 2,
+                    y: -50
+                };
+
+                safeSpawn(hearts, obj);
+            }
+        }
+
+        function spawnShield() {
+            if (Math.random() < 0.0002) {
+                const lane = Math.floor(Math.random() * laneCount);
+                const roadX = canvas.width / 2 - roadWidth / 2;
+
+                const obj = {
+                    ...shieldType,
+                    x: roadX + lane * laneWidth + laneWidth / 2 - shieldType.w / 2,
+                    y: -50
+                };
+
+                safeSpawn(shields, obj);
+            }
+        }
+
+        window.addEventListener("keydown", (e) => { keys[e.key] = true; });
+        window.addEventListener("keyup", (e) => { keys[e.key] = false; });
+
+        window.addEventListener("keydown", (e) => {
+            if (e.key === "r" || e.key === "R") restartGame();
+        });
+
+        window.addEventListener("keydown", () => { if (bgMusic.paused) bgMusic.play(); });
+        window.addEventListener("mousedown", () => { if (bgMusic.paused) bgMusic.play(); });
+        window.addEventListener("touchstart", () => { if (bgMusic.paused) bgMusic.play(); });
+
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('touchstart', (ev) => { ev.preventDefault(); keys[btn.dataset.dir] = true; });
+            btn.addEventListener('touchend', (ev) => { ev.preventDefault(); keys[btn.dataset.dir] = false; });
+            btn.addEventListener('mousedown', () => keys[btn.dataset.dir] = true);
+            btn.addEventListener('mouseup', () => keys[btn.dataset.dir] = false);
+        });
+
+        for (let i = 0; i < 20; i++)
+            roadLines.push({ x: canvas.width / 2, y: i * 40 });
+
+        function drawList(list) {
+            ctx.font = "28px Arial";
+            list.forEach(o => {
+                ctx.fillText(o.emoji, o.x, o.y + o.h);
+                o.y += roadSpeed;
+            });
+            return list.filter(o => o.y < canvas.height + 50);
+        }
+
+        function drawCar(p) {
+            ctx.fillStyle = "#00ff99";
+            ctx.fillRect(p.x, p.y, p.w, p.h);
+
+            ctx.fillStyle = "#002200";
+            ctx.fillRect(p.x + 4, p.y + 8, p.w - 8, 12);
+            ctx.fillRect(p.x + 4, p.y + p.h - 20, p.w - 8, 12);
+
+            ctx.fillStyle = "#ffff66";
+            ctx.fillRect(p.x + 3, p.y, 6, 6);
+            ctx.fillRect(p.x + p.w - 9, p.y, 6, 6);
+
+            ctx.fillStyle = "#000";
+            ctx.fillRect(p.x - 4, p.y + 8, 6, 15);
+            ctx.fillRect(p.x + p.w - 2, p.y + 8, 6, 15);
+            ctx.fillRect(p.x - 4, p.y + p.h - 25, 6, 15);
+            ctx.fillRect(p.x + p.w - 2, p.y + p.h - 25, 6, 15);
+
+            if (shieldActive) {
+                ctx.strokeStyle = "#00aaff";
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(p.x + p.w / 2, p.y + p.h / 2, 35, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+
+        function checkCollision() {
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let o = obstacles[i];
+
+                if (collides(player, o)) {
+                    obstacles.splice(i, 1);
+
+                    if (!shieldActive) {
+                        lives--;
+                        livesDisplay.textContent = lives;
+
+                        // tocar som de hit
+                        SoundManager.play("hit");
+
+                        if (lives <= 0) {
+                            gameOver = true;
+                            gameOverEl.style.display = "block";
+                            // som de game over
+                            SoundManager.play("gameover");
+                        }
+                    } else {
+                        SoundManager.play("hit");
+                    }
+                }
+            }
+        }
+
+        function checkFoodCollection() {
+            for (let i = foods.length - 1; i >= 0; i--) {
+                let f = foods[i];
+
+                if (collides(player, f)) {
+                    score += f.points;
+                    foods.splice(i, 1);
+                    // som de coletar moeda/comida
+                    SoundManager.play("coin");
+                    continue;
+                }
+
+                if (magnetActive) {
+                    let dx = player.x - f.x;
+                    let dy = player.y - f.y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 150) {
+                        f.x += dx / 12;
+                        f.y += dy / 12;
+                    }
+                }
+            }
+        }
+
+        function checkMagnetCollection() {
+            for (let i = magnets.length - 1; i >= 0; i--) {
+                if (collides(player, magnets[i])) {
+                    magnets.splice(i, 1);
+                    magnetActive = true;
+                    magnetTimer = 600;
+                    SoundManager.play("magnet");
+                }
+            }
+        }
+
+        function checkHeartCollection() {
+            for (let i = hearts.length - 1; i >= 0; i--) {
+                if (collides(player, hearts[i])) {
+                    hearts.splice(i, 1);
+                    lives++;
+                    livesDisplay.textContent = lives;
+                    SoundManager.play("heart");
+                }
+            }
+        }
+
+        function checkShieldCollection() {
+            for (let i = shields.length - 1; i >= 0; i--) {
+                if (collides(player, shields[i])) {
+                    shields.splice(i, 1);
+                    shieldActive = true;
+                    shieldTimer = 600;
+                    SoundManager.play("shield");
+                }
+            }
+        }
+
+        function draw() {
+            if (!gameStarted) return;
+
+            try {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const roadX = canvas.width / 2 - roadWidth / 2;
+
+                ctx.fillStyle = "#333";
+                ctx.fillRect(roadX, 0, roadWidth, canvas.height);
+
+                ctx.fillStyle = "#888";
+                ctx.fillRect(roadX - 20, 0, 20, canvas.height);
+                ctx.fillRect(roadX + roadWidth, 0, 20, canvas.height);
+
+                ctx.strokeStyle = "#fff";
+                ctx.lineWidth = 3;
+                ctx.setLineDash([20, 20]);
+                for (let i = 1; i < laneCount; i++) {
+                    const lineX = roadX + i * laneWidth;
+                    ctx.beginPath();
+                    ctx.moveTo(lineX, 0);
+                    ctx.lineTo(lineX, canvas.height);
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]);
+
+                roadLines.forEach(line => {
+                    ctx.fillStyle = "#fff";
+                    ctx.fillRect(canvas.width / 2 - 2, line.y, 4, 20);
+                    line.y += roadSpeed;
+                    if (line.y > canvas.height) line.y = -20;
+                });
+
+                spawnObstacle();
+                spawnFood();
+                spawnMagnet();
+                spawnHeart();
+                spawnShield();
+
+                magnets = drawList(magnets);
+                obstacles = drawList(obstacles);
+                foods = drawList(foods);
+                hearts = drawList(hearts);
+                shields = drawList(shields);
+
+            } catch (err) {
+                console.error("Erro no loop:", err);
+            } finally {
+
+                drawCar(player);
+
+                if ((keys["ArrowLeft"] || keys["left"]) && player.x > (canvas.width / 2 - roadWidth / 2) + 5)
+                    player.x -= playerSpeed;
+
+                if ((keys["ArrowRight"] || keys["right"]) && player.x + player.w < (canvas.width / 2 + roadWidth / 2) - 5)
+                    player.x += playerSpeed;
+
+                if ((keys["ArrowUp"] || keys["up"]) && player.y > 0)
+                    player.y -= playerSpeed;
+
+                if ((keys["ArrowDown"] || keys["down"]) && player.y + player.h < canvas.height)
+                    player.y += playerSpeed;
+
+                roadSpeed += acceleration;
+                score += 0.05 * roadSpeed;
+
+                speedDisplay.textContent = roadSpeed.toFixed(1);
+                scoreDisplay.textContent = Math.floor(score);
+
+                checkCollision();
+                checkFoodCollection();
+                checkMagnetCollection();
+                checkHeartCollection();
+                checkShieldCollection();
+
+                if (magnetActive && --magnetTimer <= 0)
+                    magnetActive = false;
+
+                if (shieldActive && --shieldTimer <= 0)
+                    shieldActive = false;
+
+                if (!gameOver) requestAnimationFrame(draw);
+            }
+        }
+
+        function startCountdown() {
+            let count = 3;
+            countdownEl.textContent = count;
+
+            const timer = setInterval(() => {
+                count--;
+                if (count > 0) countdownEl.textContent = count;
+                else if (count === 0) {
+                    countdownEl.textContent = "GO!";
+                    // tocar som de start quando aparece GO
+                    SoundManager.play("start");
+                }
+                else {
+                    clearInterval(timer);
+                    countdownEl.textContent = "";
+                    gameStarted = true;
+                    draw();
+                }
+            }, 800);
+        }
+
+        function restartGame() {
+            gameOver = false;
+            gameOverEl.style.display = "none";
+
+            obstacles = [];
+            foods = [];
+            magnets = [];
+            hearts = [];
+            shields = [];
+
+            roadSpeed = 3;
+            score = 0;
+            lives = 3;
+            magnetActive = false;
+            shieldActive = false;
+
+            player.x = canvas.width / 2 - 20;
+            player.y = canvas.height - 120;
+
+            livesDisplay.textContent = lives;
+            scoreDisplay.textContent = 0;
+
+            startCountdown();
+        }
+
+        // iniciar
+        // garantia: manter sons inicialmente mutados para permitir autoplay da música sem interação
+        SoundManager.setMuted(true);
+        startCountdown();
+    </script>
+
+</body>
+
+</html>

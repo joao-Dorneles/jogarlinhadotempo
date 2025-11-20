@@ -14,5 +14,9 @@ def cadastro():
 def hubjogos():
     return render_template("hubjogos.html")
 
+@app.route("/deliveydash")
+def deliverydash():
+    return render_template("deliverydash.html")
+
 if __name__ == "__main__":
     app.run(debug=True)
