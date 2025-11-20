@@ -14,7 +14,7 @@ def cadastro():
 def hubjogos():
     return render_template("hubjogos.html")
 
-@app.route("/deliveydash")
+@app.route("/deliverydash")
 def deliverydash():
     return render_template("deliverydash.html")
 
