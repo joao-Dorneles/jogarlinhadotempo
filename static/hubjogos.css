@@ -1,0 +1,250 @@
+html,
+body {
+    height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #F2D5B3;
+}
+
+header {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: #D86037;
+    width: 100%;
+    height: 20%;
+    box-shadow: inset 0 -10px 0 0 #52362B;
+}
+
+.div-botao-voltar {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 70px;
+    padding: 1.5rem;
+}
+
+.img-botao-voltar {
+    width: 1.5rem;
+    height: 1.5rem;
+
+}
+
+a {
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.trofeus {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    width: 100%;
+    height: 100%;
+}
+
+.img-trofeus {
+    width: 5rem;
+    height: 5rem;
+}
+
+.titulo-header {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+
+}
+
+.h2-header {
+    font-family: "Jersey 10", sans-serif;
+    font-weight: 200;
+    font-size: 1.7rem;
+    color: #FAF2E1;
+}
+
+.div-jogos {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 0.5rem;
+    box-shadow: inset 0 10px 0 0 #D86037;
+}
+
+.jogos-disponiveis {
+    font-family: "Jersey 10", sans-serif;
+    font-weight: 300;
+    font-size: 3rem;
+    color: #1A0E5D;
+}
+
+.jogos {
+    display: flex;
+    flex-direction: row;
+    gap: 3rem;
+}
+
+.jogo {
+    display: flex;
+    background-color: #D86037;
+    width: 8rem;
+    height: 10rem;
+    border-radius: 20px;
+}
+
+.capa-jogo {
+    width: 100%;
+    border-radius: 20px;
+}
+
+.link-jogo {
+    transition: 0.5s;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.link-jogo:hover {
+    transform: scale(1.1);
+}
+
+p {
+    font-family: "Jersey 10", sans-serif;
+    font-weight: 100;
+    font-size: 1.5rem;
+    color: #FAF2E1;
+    margin: 5px;
+}
+
+.ranking {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 5rem;
+}
+
+.titulo-classificacao {
+    color: #1A0E5D;
+    font-family: "Jersey 10", sans-serif;
+    font-size: 2rem;
+    font-weight: 200;
+}
+
+table {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    margin-bottom: 5rem;
+}
+
+tr {
+    display: flex;
+    height: 4rem;
+    background-color: white;
+    font-size: 1.5rem;
+}
+
+td {
+    display: flex;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    margin-left: 2rem;
+    margin-right: 2rem;
+    width: 2rem;
+    font-family: "Jersey 10", sans-serif;
+    font-weight: 100;
+}
+
+.tr-topo {
+    background-color: #D86037;
+    border-radius: 5px;
+}
+
+.td-topo {
+    color: #FAF2E1;
+}
+
+.destaque {
+    background-color: rgba(217, 95, 58, 0.13);
+}
+
+@media (min-width: 540px) {
+    .texto-burguer-rush {
+        font-size: 2.5rem;
+    }
+
+    .jogo {
+        width: 10rem;
+        height: 12rem;
+    }
+
+    .titulo-classificacao {
+        font-size: 2.5rem;
+    }
+
+    table {
+        width: auto;
+    }
+
+    tr {
+        width: 30rem;
+    }
+
+    td {
+        width: 100%;
+    }
+}
+
+@media (min-width: 768px) {
+    .texto-burguer-rush {
+        font-size: 3.5rem;
+    }
+
+    .img-botao-voltar {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    .img-trofeus {
+        height: 7rem;
+        width: 7rem;
+    }
+
+    .jogo {
+        width: 14rem;
+        height: 16rem;
+    }
+
+    .jogos-disponiveis {
+        font-size: 4rem;
+    }
+    
+    .titulo-classificacao {
+        font-size: 4rem;
+    }
+
+    tr {
+        width: 40rem;
+        height: 8rem;
+        font-size: 2.5rem;
+    }
+}
+
+@media(min-height: 500px){
+    header {
+        height: 15rem;
+    }
+}
