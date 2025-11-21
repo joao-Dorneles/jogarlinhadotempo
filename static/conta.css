@@ -1,0 +1,241 @@
+body,
+html {
+    height: 100dvh;
+    overflow-x: hidden;
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    display: flex;
+    height: 100vh;
+    background-color: #F2D5B3;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+@font-face {
+    font-family: "InkNutAntiqua";
+    src: url(./fonts/InknutAntiqua-Regular.woff2) format("woff2"),
+        url(./fonts/InknutAntiqua-Regular.woff) format("woff");
+    font-weight: normal;
+    font-style: normal;
+}
+
+header {
+    display: flex;
+    width: 100%;
+    height: 150px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#logo {
+    width: 100px;
+}
+
+#seta-voltar {
+    width: 30px;
+    height: 30px;
+    margin-left: 10px;
+}
+
+.minhas-infos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin-bottom: 10rem;
+}
+
+.text-minhas-infos {
+    font-family: "InkNutAntiqua", serif;
+    color: #52362B;
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.cartao-infos {
+    display: flex;
+    flex-direction: row;
+    background-color: #FAF2E1;
+    border-radius: 10px;
+    height: 20rem;
+}
+
+.indice {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #D95F3A;
+    border-radius: 10px;
+}
+
+.ul-indice {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 1rem;
+}
+
+.nomes-indice {
+    font-family: "InkNutAntiqua", serif;
+    font-size: 1rem;
+    list-style: none;
+    color: #FAF2E1;
+}
+
+.infos {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: center;
+    align-items: start;
+}
+
+.ul-infos {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    justify-content: center;
+    align-items: start;
+    width: 100%;
+    padding: 1rem;
+}
+
+.dados {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "InkNutAntiqua", serif;
+    font-size: 1rem;
+    list-style: none;
+    color: #52362B;
+    gap: 1rem;
+}
+
+.botao-editar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    background-color: #D95F3A;
+    border: 0;
+    border-radius: 100%;
+    width: 1rem;
+    height: 0.5rem;
+}
+
+.img-editar {
+    width: 1rem;
+}
+
+.botao-excluir {
+    margin-top: 1rem;
+    background-color: #D83737;
+    border-radius: 30px;
+    border: 0;
+    padding: 1rem;
+    color: #FAF2E1;
+    font-family: "InkNutAntiqua", serif;
+}
+
+.waves {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+}
+
+.wave {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 100px;
+    background: url(./images/general/wave.png);
+    background-size: 1000px 150px;
+}
+
+.wave1 {
+    animation: movimento 25s linear infinite;
+    z-index: 1000;
+    opacity: 1;
+    animation-delay: 0s;
+    bottom: 0;
+}
+
+.wave2 {
+    animation: movimento2 13s linear infinite;
+    z-index: 999;
+    opacity: 0.5;
+    animation-delay: -5s;
+    bottom: 5px;
+}
+
+.wave3 {
+    animation: movimento 7s linear infinite;
+    z-index: 998;
+    opacity: 0.2;
+    animation-delay: -2s;
+    bottom: 10px;
+}
+
+.wave4 {
+    animation: movimento2 5s linear infinite;
+    z-index: 997;
+    opacity: 0.7;
+    animation-delay: -7s;
+    bottom: 20;
+}
+
+.wave5 {
+    animation: movimento 6s linear infinite;
+    z-index: 996;
+    opacity: 0.3;
+    animation-delay: -9s;
+    bottom: 25px;
+}
+
+@keyframes movimento {
+    0% {
+        background-position-x: 0;
+    }
+
+    100% {
+        background-position-x: 1000px;
+    }
+}
+
+@keyframes movimento2 {
+    0% {
+        background-position-x: 0;
+    }
+
+    100% {
+        background-position-x: -1000px;
+    }
+}
+
+@media (min-width: 390px) {
+    #logo {
+        width: 150px;
+    }
+
+    #seta-voltar {
+        width: 40px;
+        height: 40px;
+    }
+
+
+}
+
+@media (min-width: 768px) {
+    #logo {
+        width: 200px;
+        margin-top: 20px;
+    }
+}
